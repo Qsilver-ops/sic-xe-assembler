@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 
+void pass1(const std::string& filename);
 
 int main(int argc, char* argv[]) {
 
@@ -14,26 +15,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-
     for(int i = 1; i < argc; i++){
-
-    std::ifstream infile(argv[i]);
-
-    if(!infile){
-        std::cout << "Error opening file: " << argv[i] << std::endl;
-        continue;
+        pass1(argv[i]);
     }
-
-    std::cout << "Processing file: " << argv[i] << std::endl;
-
-    std::string line;
-
-    while(std::getline(infile, line)){
-        std::cout << line << std::endl;
-    }
-
-    infile.close();
-}
 
     return 0;
 }
