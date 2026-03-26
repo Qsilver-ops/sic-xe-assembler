@@ -3,13 +3,15 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <unordered_map>
+#include <vector>
+#include <utility>
+#include <iomanip>
 #include <cctype>
 
 using namespace std;
 
-// Symbol table
-unordered_map<string, int> SYMTAB;
+// Symbol table (preserves insertion order)
+vector<pair<string, int>> SYMTAB;
 
 void pass1(const string& filename) {
 
@@ -50,7 +52,7 @@ void pass1(const string& filename) {
             continue;
         }
 
-        // print what we parsed (now includes LOCCTR)
+        // print parsed line with LOCCTR
         cout << "LOCCTR: " << LOCCTR
              << " LABEL: " << label
              << " OPCODE: " << opcode
@@ -58,10 +60,10 @@ void pass1(const string& filename) {
 
         // add label to SYMTAB only if it exists
         if (!label.empty()) {
-            SYMTAB[label] = LOCCTR;
+            SYMTAB.push_back({label, LOCCTR});
         }
 
-        // ----- LOCCTR update rules -----
+        // LOCCTR update rules 
 
         if (opcode == "WORD") {
             LOCCTR += 3;
@@ -92,17 +94,34 @@ void pass1(const string& filename) {
     }
 
     infile.close();
-}
 
-        // temporary simple LOCCTR update
-        LOCCTR += 3;
-    }
-
-    infile.close();
-
-   // check labels being stored
+    // print SYMTAB to console 
     cout << "\nSYMTAB:\n";
     for (const auto& entry : SYMTAB) {
-        cout << entry.first << " -> " << entry.second << endl;
+        cout << entry.first << " -> " << hex << entry.second << endl;
     }
+
+    // -write SYMTAB to .st file 
+
+    string outname = filename;
+    size_t dot = outname.find_last_of('.');
+    if (dot != string::npos) {
+        outname = outname.substr(0, dot);
+    }
+    outname += ".st";
+
+    ofstream symfile(outname);
+    if (!symfile) {
+        cout << "Error creating SYMTAB file: " << outname << endl;
+        return;
+    }
+
+    symfile << "SYMTAB:\n";
+    for (const auto& entry : SYMTAB) {
+        symfile << left << setw(10) << entry.first
+                << " "
+                << hex << entry.second << endl;
+    }
+
+    symfile.close();
 }
