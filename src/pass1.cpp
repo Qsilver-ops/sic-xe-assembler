@@ -21,6 +21,20 @@ void pass1(const string& filename) {
         return;
     }
 
+    // create listing file (.l)
+    string listname = filename;
+    size_t dot = listname.find_last_of('.');
+    if (dot != string::npos) {
+        listname = listname.substr(0, dot);
+    }
+    listname += ".l";
+
+    ofstream listfile(listname);
+    if (!listfile) {
+        cout << "Error creating listing file: " << listname << endl;
+        return;
+    }
+
     string line;
     int LOCCTR = 0;
 
@@ -45,25 +59,30 @@ void pass1(const string& filename) {
         // Handle START directive (initialize LOCCTR)
         if (opcode == "START") {
             LOCCTR = stoi(operand);
-            cout << "LOCCTR: " << LOCCTR
+            cout << "LOCCTR: " << hex << LOCCTR
                  << " LABEL: " << label
                  << " OPCODE: " << opcode
                  << " OPERAND: " << operand << endl;
+
+            listfile << hex << LOCCTR << "\t" << line << endl;
             continue;
         }
 
         // print parsed line with LOCCTR
-        cout << "LOCCTR: " << LOCCTR
+        cout << "LOCCTR: " << hex << LOCCTR
              << " LABEL: " << label
              << " OPCODE: " << opcode
              << " OPERAND: " << operand << endl;
+
+        // write to listing file
+        listfile << hex << LOCCTR << "\t" << line << endl;
 
         // add label to SYMTAB only if it exists
         if (!label.empty()) {
             SYMTAB.push_back({label, LOCCTR});
         }
 
-        // LOCCTR update rules 
+        // ----- LOCCTR update rules -----
 
         if (opcode == "WORD") {
             LOCCTR += 3;
@@ -94,15 +113,15 @@ void pass1(const string& filename) {
     }
 
     infile.close();
+    listfile.close();
 
-    // print SYMTAB to console 
+    // ----- print SYMTAB to console -----
     cout << "\nSYMTAB:\n";
     for (const auto& entry : SYMTAB) {
         cout << entry.first << " -> " << hex << entry.second << endl;
     }
 
-    // write SYMTAB to .st file 
-
+    // ----- write SYMTAB to .st file -----
     string outname = filename;
     size_t dot = outname.find_last_of('.');
     if (dot != string::npos) {
