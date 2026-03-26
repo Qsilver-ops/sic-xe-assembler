@@ -23,9 +23,9 @@ void pass1(const string& filename) {
 
     // create listing file (.l)
     string listname = filename;
-    size_t dot = listname.find_last_of('.');
-    if (dot != string::npos) {
-        listname = listname.substr(0, dot);
+    size_t dot2 = listname.find_last_of('.');
+    if (dot2 != string::npos) {
+        listname = listname.substr(0, dot2);
     }
     listname += ".l";
 
@@ -82,7 +82,7 @@ void pass1(const string& filename) {
             SYMTAB.push_back({label, LOCCTR});
         }
 
-        // ----- LOCCTR update rules -----
+        // LOCCTR update rules
 
         if (opcode == "WORD") {
             LOCCTR += 3;
@@ -115,13 +115,13 @@ void pass1(const string& filename) {
     infile.close();
     listfile.close();
 
-    // ----- print SYMTAB to console -----
+    // print SYMTAB to console 
     cout << "\nSYMTAB:\n";
     for (const auto& entry : SYMTAB) {
         cout << entry.first << " -> " << hex << entry.second << endl;
     }
 
-    // ----- write SYMTAB to .st file -----
+    //  write SYMTAB to .st file 
     string outname = filename;
     size_t dot = outname.find_last_of('.');
     if (dot != string::npos) {
