@@ -99,4 +99,10 @@ void pass1(const string& filename) {
     }
 
     infile.close();
+
+   // check labels being stored
+    cout << "\nSYMTAB:\n";
+    for (const auto& entry : SYMTAB) {
+        cout << entry.first << " -> " << entry.second << endl;
+    }
 }
