@@ -101,7 +101,7 @@ void pass1(const string& filename) {
         cout << entry.first << " -> " << hex << entry.second << endl;
     }
 
-    // -write SYMTAB to .st file 
+    // write SYMTAB to .st file 
 
     string outname = filename;
     size_t dot = outname.find_last_of('.');
