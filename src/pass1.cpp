@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+#include <cctype>
 
 using namespace std;
 
@@ -39,8 +40,19 @@ void pass1(const string& filename) {
             ss >> label >> opcode >> operand;
         }
 
-        // print what we parsed
-        cout << "LABEL: " << label
+        // Handle START directive (initialize LOCCTR)
+        if (opcode == "START") {
+            LOCCTR = stoi(operand);
+            cout << "LOCCTR: " << LOCCTR
+                 << " LABEL: " << label
+                 << " OPCODE: " << opcode
+                 << " OPERAND: " << operand << endl;
+            continue;
+        }
+
+        // print what we parsed (now includes LOCCTR)
+        cout << "LOCCTR: " << LOCCTR
+             << " LABEL: " << label
              << " OPCODE: " << opcode
              << " OPERAND: " << operand << endl;
 
@@ -48,6 +60,39 @@ void pass1(const string& filename) {
         if (!label.empty()) {
             SYMTAB[label] = LOCCTR;
         }
+
+        // ----- LOCCTR update rules -----
+
+        if (opcode == "WORD") {
+            LOCCTR += 3;
+        }
+        else if (opcode == "RESW") {
+            LOCCTR += 3 * stoi(operand);
+        }
+        else if (opcode == "RESB") {
+            LOCCTR += stoi(operand);
+        }
+        else if (opcode == "BYTE") {
+            if (operand[0] == 'C') {
+                // C'EOF' → number of characters
+                LOCCTR += operand.length() - 3;
+            }
+            else if (operand[0] == 'X') {
+                // X'F1' → half number of hex digits
+                LOCCTR += (operand.length() - 3) / 2;
+            }
+        }
+        else if (opcode == "END") {
+            break;
+        }
+        else {
+            // normal instruction (temporary assumption)
+            LOCCTR += 3;
+        }
+    }
+
+    infile.close();
+}
 
         // temporary simple LOCCTR update
         LOCCTR += 3;
