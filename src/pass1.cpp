@@ -49,7 +49,7 @@ vector<pair<string, int>> pass1(const string &filename) {
     stringstream ss(line);
 
     // if line starts with space/tab, there is no label
-    if (isspace(line[0])) {
+    if (isspace(line[0]) || !isalpha(line[0])) {
       ss >> opcode >> operand;
     } else {
       ss >> label >> opcode >> operand;

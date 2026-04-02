@@ -3,10 +3,15 @@
 #include <string>
 #include <unordered_map>
 optable::optable() {}
-int optable::getOpcode(std::string s) { return table.at(s).first; }
+int optable::getOpcode(std::string s) {
+  if (table.count(s) > 0) {
+    return table.at(s).first;
+  }
+  return -1;
+}
 
 int optable::getInstructionFormat(std::string s) {
   return table.at(s).second;
 }
 
-;
+

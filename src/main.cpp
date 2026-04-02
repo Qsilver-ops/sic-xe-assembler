@@ -4,9 +4,10 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 std::vector<std::pair<std::string, int>> pass1(const std::string &filename);
-void pass2(const std::string &filename);
+void pass2(const std::string &filename, std::vector<std::pair<std::string, int>>);
 
 int main(int argc, char *argv[]) {
   optable table;
@@ -22,6 +23,7 @@ int main(int argc, char *argv[]) {
   std::vector<std::pair<std::string, int>> SYMTAB;
   for (int i = 1; i < argc; i++) {
     SYMTAB = pass1(argv[i]);
+    pass2(argv[i], SYMTAB);
   }
   for (int i = 0; i < SYMTAB.size(); i++) {
     std::cout << i << ":" << SYMTAB.at(i).first ;
