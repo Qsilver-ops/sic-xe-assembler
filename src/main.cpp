@@ -5,15 +5,12 @@
 #include <iostream>
 #include <string>
 
-void pass1(const std::string &filename);
+std::vector<std::pair<std::string, int>> pass1(const std::string &filename);
+void pass2(const std::string &filename);
 
 int main(int argc, char *argv[]) {
   optable table;
   int opcode = table.getOpcode("ADD");
-  std::cout << std::hex <<opcode << std::endl;
-  std::cout << std::hex <<table.getOpcode("STA")<< std::endl;
-  std::cout << std::hex << table.getOpcode("LDA") << std::endl;
-
 
   std::cout << "LXE assembler starting...\n";
 
@@ -22,8 +19,13 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+  std::vector<std::pair<std::string, int>> SYMTAB;
   for (int i = 1; i < argc; i++) {
-    pass1(argv[i]);
+    SYMTAB = pass1(argv[i]);
+  }
+  for (int i = 0; i < SYMTAB.size(); i++) {
+    std::cout << i << ":" << SYMTAB.at(i).first ;
+    std::cout << ", " << SYMTAB.at(i).second << std::endl;
   }
 
   return 0;
