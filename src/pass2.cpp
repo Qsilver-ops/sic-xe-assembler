@@ -27,14 +27,14 @@ void pass2(const std::string &filename,
   std::cout << "starting pass2" << std::endl;
   while (std::getline(infile, line)) {
     std::cout << "current line: " << line << std::endl;
-    std::uint32_t instruction = 0;
+    std::uint32_t objectCode = 0;
     std::string mnemonic;
-    int start = 9; // mnemonics start at 9 is they are format 4, otherwise they
+    bool format4 = false;
+    int start = 10; // mnemonics start at 9 is they are format 4, otherwise they
                    // start at 10
-    int end = 9;
-    if (std::isspace(line[start])) {
-      start++;
-      end++;
+    int end = 10;
+    if(line[9] == '+'){
+      format4 = true;
     }
     while (!isspace(line[end]) && end < (int)line.length()) {
       end++;
@@ -42,8 +42,23 @@ void pass2(const std::string &filename,
 
     mnemonic = line.substr(start, end - start);
     std::cout << "mnemonic: " << mnemonic << std::endl;
-    std::cout << std::dec << (int)start << " " << (int)end << std::endl;
-    std::cout << std::hex << table.getOpcode(mnemonic) << std::endl;
+    std::cout << "opcode: " << std::hex << table.getOpcode(mnemonic) << std::endl;
+
+    objectCode = table.getOpcode(mnemonic);
+    int instructionFormat = table.getInstructionFormat(mnemonic);
+    if (format4) {
+      instructionFormat = 4;
+    }
+
+    std::cout << "instruction format: " << std::dec << instructionFormat << std::endl;
+    objectCode = table.getOpcode(mnemonic);
+    if(format4){
+      objectCode = objectCode << 24;
+    }
+    objectCode = objectCode << 16;
+
+    std::cout << "object code: " << std::hex << objectCode << std::endl;
+
 
     /*
     for (int i = 0; i < line.length(); i++){

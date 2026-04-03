@@ -11,7 +11,8 @@ int optable::getOpcode(std::string s) {
 }
 
 int optable::getInstructionFormat(std::string s) {
-  return table.at(s).second;
+  if (table.count(s) > 0) {
+    return table.at(s).second;
+  }
+  return -1;
 }
-
-
