@@ -7,11 +7,10 @@
 #include <vector>
 
 std::vector<std::pair<std::string, int>> pass1(const std::string &filename);
-void pass2(const std::string &filename, std::vector<std::pair<std::string, int>>);
+void pass2(const std::string &filename,
+           const std::vector<std::pair<std::string, int>> &SYMTAB);
 
 int main(int argc, char *argv[]) {
-  optable table;
-  int opcode = table.getOpcode("ADD");
 
   std::cout << "LXE assembler starting...\n";
 
@@ -25,7 +24,7 @@ int main(int argc, char *argv[]) {
     SYMTAB = pass1(argv[i]);
     pass2(argv[i], SYMTAB);
   }
-  for (int i = 0; i < SYMTAB.size(); i++) {
+  for (size_t i = 0; i < SYMTAB.size(); i++) {
     std::cout << i << ":" << SYMTAB.at(i).first ;
     std::cout << ", " << SYMTAB.at(i).second << std::endl;
   }

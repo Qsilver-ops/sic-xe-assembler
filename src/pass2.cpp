@@ -2,68 +2,97 @@
 // Generates listing file using SYMTAB and OPTAB
 #include "optable.h"
 #include <cctype>
-#include <cstdint>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
-#include <ostream>
+#include <sstream>
+#include <string>
 #include <vector>
 
 optable table;
 
 void pass2(const std::string &filename,
-           std::vector<std::pair<std::string, int>> SYMTAB) {
+           const std::vector<std::pair<std::string, int>> &SYMTAB) {
   std::ifstream infile(filename);
   if (!infile) {
-    std::cerr << "Error opening symtab" << std::endl;
+    std::cerr << "Error opening source file: " << filename << std::endl;
+    return;
   }
 
-  std::ofstream outFile("test.l");
+  std::string outname = filename;
+  size_t dot = outname.find_last_of('.');
+  if (dot != std::string::npos) {
+    outname = outname.substr(0, dot);
+  }
+  outname += ".l";
 
+  std::ofstream outFile(outname, std::ios::app); // append for now
   if (!outFile.is_open()) {
-    std::cerr << "Error opening file" << std::endl;
+    std::cerr << "Error opening listing file: " << outname << std::endl;
+    return;
   }
 
   std::string line;
   std::cout << "starting pass2" << std::endl;
+
   while (std::getline(infile, line)) {
-    std::cout << "current line: " << line << std::endl;
-    std::uint32_t objectCode = 0;
-    std::string mnemonic;
+    if (line.empty()) {
+      continue;
+    }
+
+    std::string label = "";
+    std::string opcode = "";
+    std::string operand = "";
+
+    std::stringstream ss(line);
+
+    // same parsing logic as pass1
+    if (std::isspace(static_cast<unsigned char>(line[0])) || !std::isalpha(static_cast<unsigned char>(line[0]))) {
+      ss >> opcode >> operand;
+    } else {
+      ss >> label >> opcode >> operand;
+    }
+
     bool format4 = false;
-    int start = 10; // mnemonics start at 9 is they are format 4, otherwise they
-                   // start at 10
-    int end = 10;
-    if(line[9] == '+'){
+    std::string mnemonic = opcode;
+
+    if (!opcode.empty() && opcode[0] == '+') {
       format4 = true;
-    }
-    while (!isspace(line[end]) && end < (int)line.length()) {
-      end++;
+      mnemonic = opcode.substr(1);
     }
 
-    mnemonic = line.substr(start, end - start);
+    std::cout << "current line: " << line << std::endl;
+    std::cout << "label: " << label << std::endl;
+    std::cout << "opcode: " << opcode << std::endl;
+    std::cout << "operand: " << operand << std::endl;
     std::cout << "mnemonic: " << mnemonic << std::endl;
-    std::cout << "opcode: " << std::hex << table.getOpcode(mnemonic) << std::endl;
 
-    objectCode = table.getOpcode(mnemonic);
+    // assembler directives are not real machine opcodes
+    if (mnemonic == "START" || mnemonic == "END" || mnemonic == "WORD" ||
+        mnemonic == "RESW" || mnemonic == "RESB" || mnemonic == "BYTE") {
+      std::cout << "directive: " << mnemonic << std::endl;
+      continue;
+    }
+
+    int opcodeValue = table.getOpcode(mnemonic);
     int instructionFormat = table.getInstructionFormat(mnemonic);
+
     if (format4) {
       instructionFormat = 4;
     }
 
+    std::cout << "opcode value: " << std::hex << opcodeValue << std::endl;
     std::cout << "instruction format: " << std::dec << instructionFormat << std::endl;
-    objectCode = table.getOpcode(mnemonic);
-    if(format4){
-      objectCode = objectCode << 24;
+
+    if (opcodeValue == -1) {
+      std::cout << "invalid opcode: " << mnemonic << std::endl;
+      continue;
     }
-    objectCode = objectCode << 16;
 
-    std::cout << "object code: " << std::hex << objectCode << std::endl;
-
-
-    /*
-    for (int i = 0; i < line.length(); i++){
-
+    unsigned int objectCode = static_cast<unsigned int>(opcodeValue);
+    std::cout << "object code (partial): " << std::hex << objectCode << std::endl;
   }
-  */
-  }
+
+  infile.close();
+  outFile.close();
 }
