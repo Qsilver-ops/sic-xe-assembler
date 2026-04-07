@@ -1,5 +1,6 @@
 // pass1.cpp
 // Handles SYMTAB creation and LOCCTR tracking
+#include "optable.h"
 #include <cctype>
 #include <fstream>
 #include <iomanip>
@@ -12,6 +13,8 @@ using namespace std;
 
 // Symbol table (preserves insertion order)
 vector<pair<string, int>> pass1(const string &filename) {
+
+  optable table;
 
   vector<pair<string, int>> SYMTAB;
 
@@ -85,7 +88,22 @@ vector<pair<string, int>> pass1(const string &filename) {
       LOCCTR += 3 * stoi(operand);
     } else if (opcode == "RESB") {
       LOCCTR += stoi(operand);
-    } else if (opcode == "BYTE") {
+    } else if (opcode == "BASE") {
+      LOCCTR += 0;
+    } else if (opcode == "*") {
+      // literal pool entry — calculate size same as BYTE
+      string op = operand;
+      if (op[0] == '=') {
+        op = op.substr(1);
+      }
+      if (op[0] == 'C') {
+        LOCCTR += op.length() - 3;
+      } else if (op[0] == 'X') {
+        LOCCTR += (op.length() - 3) / 2;
+      }
+    }
+
+    else if (opcode == "BYTE") {
       if (operand[0] == 'C') {
         // C'EOF' → number of characters
         LOCCTR += operand.length() - 3;
@@ -97,7 +115,17 @@ vector<pair<string, int>> pass1(const string &filename) {
       break;
     } else {
       // normal instruction (temporary assumption)
-      LOCCTR += 3;
+      int instructionFormat = table.getInstructionFormat(opcode);
+      if (opcode[0] == '+') {
+        instructionFormat = 4;
+      }
+      if (instructionFormat == -1) {
+        // unrecognized opcode, skip or handle error
+        cerr << "Warning: unknown opcode '" << opcode << "' at LOCCTR " << hex
+             << LOCCTR << endl;
+      } else {
+        LOCCTR += instructionFormat;
+      }
     }
   }
 
