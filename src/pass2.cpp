@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -47,7 +48,8 @@ void pass2(const std::string &filename,
     std::stringstream ss(line);
 
     // same parsing logic as pass1
-    if (std::isspace(static_cast<unsigned char>(line[0])) || !std::isalpha(static_cast<unsigned char>(line[0]))) {
+    if (std::isspace(static_cast<unsigned char>(line[0])) ||
+        !std::isalpha(static_cast<unsigned char>(line[0]))) {
       ss >> opcode >> operand;
     } else {
       ss >> label >> opcode >> operand;
@@ -69,7 +71,8 @@ void pass2(const std::string &filename,
 
     // assembler directives are not real machine opcodes
     if (mnemonic == "START" || mnemonic == "END" || mnemonic == "WORD" ||
-        mnemonic == "RESW" || mnemonic == "RESB" || mnemonic == "BYTE") {
+        mnemonic == "RESW" || mnemonic == "RESB" || mnemonic == "BYTE" ||
+        mnemonic == "BASE") {
       std::cout << "directive: " << mnemonic << std::endl;
       continue;
     }
@@ -81,8 +84,36 @@ void pass2(const std::string &filename,
       instructionFormat = 4;
     }
 
+    if (instructionFormat == 3) {
+      opcodeValue = opcodeValue << 18;
+    } else if (format4) {
+      opcodeValue = opcodeValue << 24;
+    }
+
+    // logic for checking addressing modes
+    // n, i flags first because they are the easiest
+    if (operand[0] == '#') { // immediate addressing
+      opcodeValue += 1;
+      operand = operand.substr(1);
+      try {
+        int n = std::stoi(operand);
+        opcodeValue |= n;
+      } catch (const std::invalid_argument &e) {
+        // not and immediate value, look up in symtab
+        for (int i = 0; i < SYMTAB.size(); i++) {
+          if (SYMTAB.at(i).first == operand) {
+            int value = SYMTAB.at(i).second;
+            std::cout << operand << " -> ";
+            std::cout << std::hex << value << std::endl;
+            opcodeValue |= value; 
+          }
+        }
+      }
+    }
+
     std::cout << "opcode value: " << std::hex << opcodeValue << std::endl;
-    std::cout << "instruction format: " << std::dec << instructionFormat << std::endl;
+    std::cout << "instruction format: " << std::dec << instructionFormat
+              << std::endl;
 
     if (opcodeValue == -1) {
       std::cout << "invalid opcode: " << mnemonic << std::endl;
@@ -90,7 +121,8 @@ void pass2(const std::string &filename,
     }
 
     unsigned int objectCode = static_cast<unsigned int>(opcodeValue);
-    std::cout << "object code (partial): " << std::hex << objectCode << std::endl;
+    std::cout << "object code (partial): " << std::hex << objectCode
+              << std::endl;
   }
 
   infile.close();
